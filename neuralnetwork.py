@@ -63,7 +63,7 @@ class DenseLayer:
             self.b = np.random.randn(num_neurons) * 0.01
         elif initialization == "kaiming":
             self.w = np.random.randn(num_neurons, num_inputs) * np.sqrt(2 / num_inputs)
-            self.b = np.random.randn(num_neurons, 1) * np.sqrt(2 / num_inputs)
+            self.b = np.random.randn(num_neurons) * np.sqrt(2 / num_inputs)
         else:
             print("unrecognized initialization method: " + initialization)
         # gradient descent
