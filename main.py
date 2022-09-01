@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import networkio as nio
-import cnn
+import neuralnetwork
 import math
 from tqdm import tqdm
 
@@ -13,9 +13,9 @@ def main():
     """
     this is the main thread
     """
-    #nio.load()  # load network from nio
+    # nio.load()  # load network from nio
     read()  # load dataset
-    train(start=0, end=100, batch_size=1, num_epochs=1)  # if batch_size=1, it is stochastic gradient descent
+    train(start=0, end=1000, batch_size=1, num_epochs=1)  # if batch_size=1, it is stochastic gradient descent
     print("training set accuracy: ")
     test(start=0, end=100)
     print("dev set accuracy: ")
@@ -33,7 +33,7 @@ def test(start, end):
     corr_times = 0
     progress_bar = tqdm(total=end - start)
     for sample_num in range(start, end):
-        yhat = cnn.test(x[sample_num, :, :].reshape(1, x.shape[1], x.shape[2]))  # gets network's output
+        yhat = neuralnetwork.test(x[:, sample_num])  # gets network's output
         answer = yhat.argmax(axis=0)  # the index whose element has the largest value
         if answer == y[0, sample_num]:
             corr_times += 1  # got it right
@@ -57,14 +57,14 @@ def train(start, end, batch_size, num_epochs):
         for b in range(num_batches):
             batch_start = start + batch_size * b
             batch_end = min(end, start + batch_size * (b + 1))  # start and end index of the current batch
-            cnn.learn(x[batch_start: batch_end, :, :], y2[:, batch_start: batch_end])
+            neuralnetwork.learn(x[:, batch_start : batch_end], y2[:, batch_start : batch_end])
             progress_bar.update(1)
-        #nio.save()  # autosave every epoch
+        # nio.save()  # autosave every epoch
     progress_bar.close()
 
     # display cnn's cost map
-    x_points = range(len(cnn.cost_map))
-    y_points = cnn.cost_map
+    x_points = range(len(neuralnetwork.cost_map))
+    y_points = neuralnetwork.cost_map
     plt.plot(x_points, y_points)
     plt.show()
 
@@ -73,24 +73,19 @@ def train(start, end, batch_size, num_epochs):
 def read():
     """
     defines x, y, and y2
-    x: the image data, a numpy matrix of dimension (m, 28, 28)
+    x: the image data, a numpy matrix of dimension (784, m)
     y: the image labels, a numpy matrix of (1, m)
     y2: the correct outputs, a numpy matrix of (10, m)
     """
     global x, y, y2
     df = pd.read_csv("train.csv")
-    x_temp = df.to_numpy()  # read from csv and convert it to a numpy matrix
-    y = x_temp[:, 0:1].T
-    x_temp = x_temp[:, 1:].T  # separates data labels w/ data
-    x_temp = x_temp / 255  # contains x between 0 and 1, makes training easier
-    m = x_temp.shape[1]
+    x = df.to_numpy()  # read from csv and convert it to a numpy matrix
+    y = x[:, 0:1].T
+    x = x[:, 1:].T  # separates data labels w/ data
+    x = x / 255  # contains x between 0 and 1, makes training easier
+    m = x.shape[1]
     y2 = np.zeros((10, m))  # init y2, x.shape[1] = m = #samples
-    y2[y.flatten(), range(x_temp.shape[1])] = 1.  # if the col index = the data label, have that element equals 1
-    '''
-    if we were working with only dense layers, then the initialized dataset is good to go
-    but since we are starting with convolutional layers, we need to convert x from dimension (784, m) to (m, 28, 28)
-    '''
-    x = x_temp.T.reshape(m, 28, 28)
+    y2[y.flatten(), range(x.shape[1])] = 1.  # if the col index = the data label, have that element equals 1
 
 
 if __name__ == '__main__':
